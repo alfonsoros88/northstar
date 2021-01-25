@@ -181,7 +181,18 @@ new container:</p>
 </code></pre>
 <p>The <code>REPOSITORY_NAME</code> is the identifier of the target repository where to
 install the new container (see <a href="repositories.html">repositories</a>). <code>NPK_SIZE</code> is
-the size in bytes of the <code>.npk</code> file that will be transfered.</p>
+the size in bytes of the <code>.npk</code> file that will be transfered. The request for
+uninstalling a containers requires the name and version of the container
+specified in <code>CONTAINER_NAME</code> and <code>CONTAINER_VERSION</code> correspondingly.</p>
+<pre><code class="language-json">{
+    &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
+    &quot;payload&quot;: {
+        &quot;Request&quot;: {
+            &quot;Uninstall&quot;: [CONTAINER_NAME, CONTAINER_VERSION]
+        }
+    }
+}
+</code></pre>
 <p>For the following snippet, we can create a dummy container called <code>foo</code>. First,
 we create a directory layout for he container that looks like this:</p>
 <pre><code>foo
@@ -235,10 +246,12 @@ with open(npk, 'rb') as f:
         chunk = f.read(4096)
 
 # Receive an ok response
+# {'Response': {'Ok': None}}}
 response = s.recv(8000)
 print(json.loads(response.decode('utf-8')))
 
 # Get application installed notification
+# {'Notification': {'Install': ['foo', '0.0.1']}}}
 response = s.recv(8000)
 print(json.loads(response.decode('utf-8')))
 
@@ -257,13 +270,14 @@ request = json.dumps(request) + '\n'
 s.send(request.encode('utf-8'))
 
 # Receive an ok response
+# {'Response': {'Ok': None}}}
 response = s.recv(8000)
 print(json.loads(response.decode('utf-8')))
 
 # Get application uninstalled notification
+# {'Notification': {'Uninstalled': ['foo', '0.0.1']}}}
 response = s.recv(8000)
 print(json.loads(response.decode('utf-8')))
-
 </code></pre>
 
                     </main>
