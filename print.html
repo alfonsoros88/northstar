@@ -168,29 +168,29 @@
                         <h1><a class="header" href="#implementing-a-client" id="implementing-a-client">Implementing a client</a></h1>
 <p>This tutorial demonstrates how to interact with <strong>Northstar</strong> using its <strong>REST
 API</strong>.</p>
-<p><strong>Northstar</strong> uses <strong>JSON</strong> to encode the messages with clients. This is a
-common approach that facilitate clients to be implemented in any programming
+<p><strong>Northstar</strong> uses <strong>JSON</strong> to encode the messages shared with clients. This is
+a common approach that facilitate clients to be implemented in any programming
 language.  However, <strong>Northstar</strong> as a library, provides a convenient <code>Client</code>
 type that can be used for a simpler client implementation using <strong>Rust</strong>.</p>
-<p>Aiming for generality, the snippets shown in this tutorial use <strong>Python</strong> for
-its simplicity and easy use.</p>
+<p>For the purpose of being general, the snippets shown in this tutorial are
+written in <strong>Python</strong> for its simplicity and easy translation to other
+languages.</p>
 <h1><a class="header" href="#interation-with-northstar" id="interation-with-northstar">Interation with Northstar</a></h1>
-<p>Northstar interacts with clients through a <code>tcp</code> socket. The clients
-exchange messages with Northstar in the form of requests and responses
-encoded in <strong>JSON</strong> data format. These requests and responses are a direct
-serialization of the structures defined in the <code>api/model.rs</code> file.</p>
-<p>The first step is to establish a connection with Northstar using a <code>tcp</code> socket.</p>
+<p>Northstar interacts with clients through a <code>TCP</code> socket. The clients exchange
+messages with Northstar in the form of requests and responses encoded in
+<strong>JSON</strong>. These requests and responses are a direct serialization of the
+structures defined in <code>api/model.rs</code>.</p>
+<p>The first step is to establish a connection with Northstar using a socket.</p>
 <pre><code class="language-python">import socket
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((&quot;localhost&quot;, 4200))
 </code></pre>
 <p>Northstar uses the port <code>4200</code> by default. Check the configuration (see
-<code>northstar.toml</code>) for the port being used by the instance you want to connect
-to.</p>
-<p>The messages sent Northstar and the clients have two fields, <code>id</code> and <code>payload</code>.
-The <code>id</code> field is a generated <code>UUID</code> version 4 identifier used to tag a message
-exchange.</p>
+<code>northstar.toml</code>) for the port used by the target instance.</p>
+<p>The messages sent between Northstar and the clients have two fields, <code>id</code> and
+<code>payload</code>.  The <code>id</code> field is a generated <code>UUID</code> version 4 identifier used to
+tag a message exchange.</p>
 <pre><code class="language-json">{
     &quot;id&quot;: &quot;UUID&quot;,
     &quot;payload&quot;: {

@@ -164,22 +164,21 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#interation-with-northstar" id="interation-with-northstar">Interation with Northstar</a></h1>
-<p>Northstar interacts with clients through a <code>tcp</code> socket. The clients
-exchange messages with Northstar in the form of requests and responses
-encoded in <strong>JSON</strong> data format. These requests and responses are a direct
-serialization of the structures defined in the <code>api/model.rs</code> file.</p>
-<p>The first step is to establish a connection with Northstar using a <code>tcp</code> socket.</p>
+<p>Northstar interacts with clients through a <code>TCP</code> socket. The clients exchange
+messages with Northstar in the form of requests and responses encoded in
+<strong>JSON</strong>. These requests and responses are a direct serialization of the
+structures defined in <code>api/model.rs</code>.</p>
+<p>The first step is to establish a connection with Northstar using a socket.</p>
 <pre><code class="language-python">import socket
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((&quot;localhost&quot;, 4200))
 </code></pre>
 <p>Northstar uses the port <code>4200</code> by default. Check the configuration (see
-<code>northstar.toml</code>) for the port being used by the instance you want to connect
-to.</p>
-<p>The messages sent Northstar and the clients have two fields, <code>id</code> and <code>payload</code>.
-The <code>id</code> field is a generated <code>UUID</code> version 4 identifier used to tag a message
-exchange.</p>
+<code>northstar.toml</code>) for the port used by the target instance.</p>
+<p>The messages sent between Northstar and the clients have two fields, <code>id</code> and
+<code>payload</code>.  The <code>id</code> field is a generated <code>UUID</code> version 4 identifier used to
+tag a message exchange.</p>
 <pre><code class="language-json">{
     &quot;id&quot;: &quot;UUID&quot;,
     &quot;payload&quot;: {
