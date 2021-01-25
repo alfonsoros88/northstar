@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="client/client.html"><strong aria-hidden="true">1.</strong> Implementing a client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="client/connect.html"><strong aria-hidden="true">1.1.</strong> Interacting with Northstar</a></li><li class="chapter-item expanded "><a href="client/repositories.html"><strong aria-hidden="true">1.2.</strong> Repositories</a></li><li class="chapter-item expanded "><a href="client/containers.html"><strong aria-hidden="true">1.3.</strong> Containers</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="client/client.html"><strong aria-hidden="true">1.</strong> Implementing a client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="client/connect.html"><strong aria-hidden="true">1.1.</strong> Interacting with Northstar</a></li><li class="chapter-item expanded "><a href="client/repositories.html"><strong aria-hidden="true">1.2.</strong> Repositories</a></li><li class="chapter-item expanded "><a href="client/containers.html"><strong aria-hidden="true">1.3.</strong> Containers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="client/list_containers.html"><strong aria-hidden="true">1.3.1.</strong> List containers</a></li><li class="chapter-item expanded "><a href="client/start_containers.html"><strong aria-hidden="true">1.3.2.</strong> Starting containers and notifications</a></li><li class="chapter-item expanded "><a href="client/stop_containers.html"><strong aria-hidden="true">1.3.3.</strong> Stopping containers</a></li><li class="chapter-item expanded "><a href="client/install_containers.html"><strong aria-hidden="true">1.3.4.</strong> Installing and uninstalling containers</a></li></ol></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -166,8 +166,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#implementing-a-client" id="implementing-a-client">Implementing a client</a></h1>
-<p>This tutorial demonstrates how to interact with <strong>Northstar</strong> using its <strong>REST
-API</strong>.</p>
+<p>This tutorial demonstrates how to interact with <strong>Northstar</strong> using its <strong>API</strong>.</p>
 <p><strong>Northstar</strong> uses <strong>JSON</strong> to encode the messages shared with clients. This is
 a common approach that facilitate clients to be implemented in any programming
 language.  However, <strong>Northstar</strong> as a library, provides a convenient <code>Client</code>
@@ -215,8 +214,25 @@ containers is checked with their signature information. Otherwise, this step is
 skipped. Notice that for the verification step, it is required that the
 underlying system has <code>verity</code> support enabled. Containers installed at runtime
 to repositories with a signing key, will be verified too.</p>
-<p>Here is an example on how to request the repository configuration:</p>
-<pre><code class="language-python"># API Request for repository information
+<p>The next block shows the <code>JSON</code> structure that represents the request for the
+repository configuration. It is important to encode this structure without the
+new lines. Also a new line has to be appended to the end of the serialized
+string.</p>
+<pre><code class="language-json">{
+    &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
+    &quot;payload&quot;: {
+        &quot;Request&quot;: &quot;Repositories&quot;
+    }
+}
+</code></pre>
+<p>Here is an example that sends a request the repository configuration:</p>
+<pre><code class="language-python">import uuid
+import json
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((&quot;localhost&quot;, 4200))
+
+# API Request for repository information
 request = {
     'id': str(uuid.uuid4()),
     'payload': {
@@ -224,66 +240,32 @@ request = {
     }
 }
 
-# It is required for the API requests to be terminated with a new line'\n'
+# It is required for the API requests to be terminated with a new line '\n'
 request = json.dumps(request) + '\n'
 
 # send the request
-s.send(bytes(request, 'utf-8'))
+s.send(request.encode('utf-8'))
 
 # receive the list of repositories
 response = s.recv(8000)
 
 # decode the response
-response = json.loads(str(response, 'utf-8'))
+response = json.loads(response.decode('utf-8'))
 
 # The response contains a list with the configured repositories
 # Currently, only the filesystem path of every repository is provided
-repositories = response['payload']['Response']['Repositories']
-print(f'repositories: {repositories}')
+# e.g. {'Response': {'Repositories': {'default': {'dir': 'target/northstar/repository'}}}}
+print(response['payload'])
 </code></pre>
 <h1><a class="header" href="#containers" id="containers">Containers</a></h1>
-<h3><a class="header" href="#listing-containers" id="listing-containers">Listing containers</a></h3>
-<p>In the smae way as <a href="client/repositories.html">repositories</a>, it is possible to request
-the current state of the Northstar containers. Here is an example similar to the
-one for repositories:</p>
-<pre><code class="language-python"># The request looks like this:
-request = {
-    'id': str(uuid.uuid4()),
-    'payload': {
-        'Request': 'Containers'
-    }
-}
-
-# notice the terminating '\n'
-request = json.dumps(request) + '\n'
-
-# send request
-s.send(bytes(request, 'utf-8'))
-
-# receive the list of containers
-response = s.recv(8000)
-response = json.loads(str(response, 'utf-8'))
-
-# The response is a list of containers.
-# Each of these containers will come with the following fields:
-#   - manifest
-#   - process
-#   - repository
-print(response)
-</code></pre>
-<p>The response is quite lengthy and more complex to that of repositories. This
-time, we receive a list of objects corresponding to each container. Each
-of them provides information about the container's manifest, the repository
-where it is installed and possibly information about the system process if it is
-currently on execution.</p>
-<p>Here is an example on how to get a list with names of the available containers:</p>
-<pre><code class="language-python">names = []
-for container in response['payload']['Response']['Containers']:
-    names.append(c['manifest']['name'])
-
-print(f'containers: {names}')
-</code></pre>
-<h3><a class="header" href="#starting-containers-and-notifications" id="starting-containers-and-notifications">Starting containers and notifications</a></h3>
+<ul>
+<li><a href="client/list_containers.html">List containers</a></li>
+<li><a href="client/start_containers.html">Starting containers and notifications</a></li>
+<li><a href="client/stop_containers.html">Stopping containers</a></li>
+<li><a href="client/install_containers.html">Installing and uninstalling containers</a></li>
+</ul>
+<h1><a class="header" href="#list-containers" id="list-containers">List containers</a></h1>
+<h1><a class="header" href="#starting-containers-and-notifications" id="starting-containers-and-notifications">Starting containers and notifications</a></h1>
 <p>Northstar has a notification system where messages are sent to the clients with
 information about events such as:</p>
 <ul>
@@ -295,6 +277,18 @@ information about events such as:</p>
 <li>Shutdown of the runtime</li>
 <li>Applications running out of memory</li>
 </ul>
+<p>Here is the <code>JSON</code> structure to request Northstar to start a container.
+<code>CONTAINER_NAME</code> is the name of the container specified in its manifest that is
+requested to start.</p>
+<pre><code class="language-json">{
+    &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
+    &quot;payload&quot;: {
+        &quot;Request&quot;: {
+            &quot;Start&quot;: CONTAINER_NAME
+        }
+    }
+}
+</code></pre>
 <p>In the following snippet, a request is sent to start the <code>memeater</code> example
 container. After the container is started, we will receive 2 notifications, one
 to signal the start of the application and eventually a second one that signals
@@ -309,25 +303,39 @@ request = {
     }
 }
 
-# send the request
+# Serialize the request, notice the appended new line
 request = json.dumps(request) + '\n'
-s.send(bytes(request, 'utf-8'))
+
+# Encode and send the request
+s.send(request.encode('utf-8'))
 
 # Receive the ok response to the request
+# {'Response': {'Ok': None}}
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # Receive the first notification for the start of the container
-data = s.recv(8000)
-response = json.loads(str(data, 'utf-8'))
-print(f'container started notification: {response}')
+# {'Notification': {'ApplicationStarted': ['memeater', '0.0.1']}}
+response = s.recv(8000)
+print(json.loads(response.decode('utf-8')))
 
 # Receive the notification for the out of memory
-data = s.recv(8000)
-response = json.loads(str(data, 'utf-8'))
-print(f'out of memory: {response}')
+# {'Notification': {'OutOfMemory': 'memeater'}}
+response = s.recv(8000)
+print(json.loads(response.decode('utf-8')))
 </code></pre>
-<h3><a class="header" href="#stopping-containers" id="stopping-containers">Stopping containers</a></h3>
+<h1><a class="header" href="#stopping-containers" id="stopping-containers">Stopping containers</a></h1>
+<p>Homologous to <a href="client/start_containers.html">starting containers</a>, this is the <code>JSON</code>
+structure to stop a container:</p>
+<pre><code class="language-json">{
+    &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
+    &quot;payload&quot;: {
+        &quot;Request&quot;: {
+            &quot;Stop&quot;: CONTAINER_NAME
+        }
+    }
+}
+</code></pre>
 <p>Stopping containers is very similar to starting them. In the following snippet
 we start and subsequently stop the <code>hello</code> example container.</p>
 <pre><code class="language-python"># Start hello container
@@ -342,15 +350,17 @@ request = {
 
 # Send the request
 request = json.dumps(request) + '\n'
-s.send(bytes(request, 'utf-8'))
+s.send(request.encode('utf-8'))
 
 # get ok response
+# {'Response': {'Ok': None}}
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # get application started notification
+# {'Notification': {'ApplicationStarted': ['hello', '0.0.1']}}
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # Stop hello container
 request = {
@@ -364,22 +374,37 @@ request = {
 
 # Send the request
 request = json.dumps(request) + '\n'
-s.send(bytes(request, 'utf-8'))
+s.send(request.encode('utf-8'))
 
 # Get ok response
+# {'Response': {'Ok': None}}
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # Get notification for the stopped container
+# {'Notification': {'ApplicationStopped': ['hello', '0.0.1']}}
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 </code></pre>
-<h3><a class="header" href="#installing-and-uninstalling-containers" id="installing-and-uninstalling-containers">Installing and uninstalling containers</a></h3>
+<h1><a class="header" href="#installing-and-uninstalling-containers" id="installing-and-uninstalling-containers">Installing and uninstalling containers</a></h1>
 <p>Installing containers is a bit trickier. First a request to install a new
 container is sent with the target repository and the size of the container <code>npk</code>
 file in bytes. Then the file is directly copied into the socket. If successful,
 an <code>Ok</code> response will be received and a notification of the newly installed
-container.</p>
+container. The following is the <code>JSON</code> structure to signal the installation of a
+new container:</p>
+<pre><code class="language-json">{
+    &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
+    &quot;payload&quot;: {
+        &quot;Request&quot;: {
+            &quot;Install&quot;: [REPOSITORY_NAME, NPK_SIZE]
+        }
+    }
+}
+</code></pre>
+<p>The <code>REPOSITORY_NAME</code> is the identifier of the target repository where to
+install the new container (see <a href="client/repositories.html">repositories</a>). <code>NPK_SIZE</code> is
+the size in bytes of the <code>.npk</code> file that will be transfered.</p>
 <p>For the following snippet, we can create a dummy container called <code>foo</code>. First,
 we create a directory layout for he container that looks like this:</p>
 <pre><code>foo
@@ -419,9 +444,11 @@ request = {
     }
 }
 
-# send the request
+# Serialize
 request = json.dumps(request) + '\n'
-s.send(bytes(request, 'utf-8'))
+
+# Send the request
+s.send(request.encode('utf-8'))
 
 # Now we simply copy the file to the socket
 with open(npk, 'rb') as f:
@@ -432,11 +459,11 @@ with open(npk, 'rb') as f:
 
 # Receive an ok response
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # Get application installed notification
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # Uninstall the container
 request = {
@@ -450,15 +477,15 @@ request = {
 
 # send the request
 request = json.dumps(request) + '\n'
-s.send(bytes(request, 'utf-8'))
+s.send(request.encode('utf-8'))
 
 # Receive an ok response
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 # Get application uninstalled notification
 response = s.recv(8000)
-print(json.loads(str(response, 'utf-8')))
+print(json.loads(response.decode('utf-8')))
 
 </code></pre>
 

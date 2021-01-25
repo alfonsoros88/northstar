@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../client/client.html"><strong aria-hidden="true">1.</strong> Implementing a client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../client/connect.html"><strong aria-hidden="true">1.1.</strong> Interacting with Northstar</a></li><li class="chapter-item expanded "><a href="../client/repositories.html" class="active"><strong aria-hidden="true">1.2.</strong> Repositories</a></li><li class="chapter-item expanded "><a href="../client/containers.html"><strong aria-hidden="true">1.3.</strong> Containers</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../client/client.html"><strong aria-hidden="true">1.</strong> Implementing a client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../client/connect.html"><strong aria-hidden="true">1.1.</strong> Interacting with Northstar</a></li><li class="chapter-item expanded "><a href="../client/repositories.html" class="active"><strong aria-hidden="true">1.2.</strong> Repositories</a></li><li class="chapter-item expanded "><a href="../client/containers.html"><strong aria-hidden="true">1.3.</strong> Containers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../client/list_containers.html"><strong aria-hidden="true">1.3.1.</strong> List containers</a></li><li class="chapter-item expanded "><a href="../client/start_containers.html"><strong aria-hidden="true">1.3.2.</strong> Starting containers and notifications</a></li><li class="chapter-item expanded "><a href="../client/stop_containers.html"><strong aria-hidden="true">1.3.3.</strong> Stopping containers</a></li><li class="chapter-item expanded "><a href="../client/install_containers.html"><strong aria-hidden="true">1.3.4.</strong> Installing and uninstalling containers</a></li></ol></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -178,8 +178,25 @@ containers is checked with their signature information. Otherwise, this step is
 skipped. Notice that for the verification step, it is required that the
 underlying system has <code>verity</code> support enabled. Containers installed at runtime
 to repositories with a signing key, will be verified too.</p>
-<p>Here is an example on how to request the repository configuration:</p>
-<pre><code class="language-python"># API Request for repository information
+<p>The next block shows the <code>JSON</code> structure that represents the request for the
+repository configuration. It is important to encode this structure without the
+new lines. Also a new line has to be appended to the end of the serialized
+string.</p>
+<pre><code class="language-json">{
+    &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
+    &quot;payload&quot;: {
+        &quot;Request&quot;: &quot;Repositories&quot;
+    }
+}
+</code></pre>
+<p>Here is an example that sends a request the repository configuration:</p>
+<pre><code class="language-python">import uuid
+import json
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((&quot;localhost&quot;, 4200))
+
+# API Request for repository information
 request = {
     'id': str(uuid.uuid4()),
     'payload': {
@@ -187,22 +204,22 @@ request = {
     }
 }
 
-# It is required for the API requests to be terminated with a new line'\n'
+# It is required for the API requests to be terminated with a new line '\n'
 request = json.dumps(request) + '\n'
 
 # send the request
-s.send(bytes(request, 'utf-8'))
+s.send(request.encode('utf-8'))
 
 # receive the list of repositories
 response = s.recv(8000)
 
 # decode the response
-response = json.loads(str(response, 'utf-8'))
+response = json.loads(response.decode('utf-8'))
 
 # The response contains a list with the configured repositories
 # Currently, only the filesystem path of every repository is provided
-repositories = response['payload']['Response']['Repositories']
-print(f'repositories: {repositories}')
+# e.g. {'Response': {'Repositories': {'default': {'dir': 'target/northstar/repository'}}}}
+print(response['payload'])
 </code></pre>
 
                     </main>
