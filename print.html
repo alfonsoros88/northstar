@@ -276,7 +276,7 @@ encodes the request for the state of the containers:</p>
 }
 </code></pre>
 <p>The following snippet sends the request for the container information, just as
-the previous example to request the repository configuration.</p>
+the previous example requested the repository configuration.</p>
 <pre><code class="language-python"># The request looks like this:
 request = {
     'id': str(uuid.uuid4()),
@@ -304,11 +304,11 @@ response = json.loads(response.decode('utf-8'))
 #   - repository
 print(response)
 </code></pre>
-<p>The response is quite lengthy and more complex to that of repositories. This
+<p>The response is quite lengthy and more complex than that of repositories. This
 time, we receive a list of objects corresponding to each container. Each
 of them provides information about the container's manifest, the repository
 where it is installed and possibly information about the system process if it is
-currently on execution.</p>
+currently executing.</p>
 <p>Here is an example on how to get a list with names of the available containers:</p>
 <pre><code class="language-python">names = []
 for container in response['payload']['Response']['Containers']:
