@@ -175,9 +175,8 @@ information about events such as:</p>
 <li>Shutdown of the runtime</li>
 <li>Applications running out of memory</li>
 </ul>
-<p>Here is the <code>JSON</code> structure to request Northstar to start a container.
-<code>CONTAINER_NAME</code> is the name of the container specified in its manifest that is
-requested to start.</p>
+<p>Here is the <code>JSON</code> structure requesting that Northstar start a container.
+<code>CONTAINER_NAME</code> is the name of the container specified in the manifest that will be started.</p>
 <pre><code class="language-json">{
     &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
     &quot;payload&quot;: {
@@ -188,9 +187,8 @@ requested to start.</p>
 }
 </code></pre>
 <p>In the following snippet, a request is sent to start the <code>memeater</code> example
-container. After the container is started, we will receive 2 notifications, one
-to signal the start of the application and eventually a second one that signals
-the termination of the application for consuming all the memory.</p>
+container. After the container is started, we will receive 2 notifications, one signaling the start of the application, and eventually a second one that signals
+the termination of the application (after consuming all the memory, as this example is designed to do).</p>
 <pre><code class="language-python"># start memeater container
 request = {
     'id': str(uuid.uuid4()),
