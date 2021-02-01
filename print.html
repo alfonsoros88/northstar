@@ -209,11 +209,11 @@ these actions if they are configured with the <code>writable</code> parameter se
 <p>Repositories specified in the configuration are accessed at the start of
 Northstar. Currently it is not possible to add or remove repositories at
 runtime.</p>
-<p>If a repository specifies a signing key in the configuration, the content of its
-containers is checked with their signature information. Otherwise, this step is
+<p>If a repository specifies a signing key in the configuration, the contents of the
+containers are checked with their signature information. Otherwise, this step is
 skipped. Notice that for the verification step, it is required that the
 underlying system has <code>verity</code> support enabled. Containers installed at runtime
-to repositories with a signing key, will be verified too.</p>
+to repositories with a signing key will also be verified.</p>
 <p>The next block shows the <code>JSON</code> structure that represents the request for the
 repository configuration. It is important to encode this structure without the
 new lines. Also a new line has to be appended to the end of the serialized
@@ -225,7 +225,7 @@ string.</p>
     }
 }
 </code></pre>
-<p>Here is an example that sends a request the repository configuration:</p>
+<p>Here is an example that sends a request for the repository configuration:</p>
 <pre><code class="language-python">import uuid
 import json
 
