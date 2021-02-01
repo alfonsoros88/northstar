@@ -167,7 +167,7 @@
 <p>Installing containers is a bit trickier. First a request to install a new
 container is sent with the target repository and the size of the container <code>npk</code>
 file in bytes. Then the file is directly copied into the socket. If successful,
-an <code>Ok</code> response will be received and a notification of the newly installed
+an <code>Ok</code> response will be received with a notification of the newly installed
 container. The following is the <code>JSON</code> structure to signal the installation of a
 new container:</p>
 <pre><code class="language-json">{
@@ -182,7 +182,7 @@ new container:</p>
 <p>The <code>REPOSITORY_NAME</code> is the identifier of the target repository where to
 install the new container (see <a href="repositories.html">repositories</a>). <code>NPK_SIZE</code> is
 the size in bytes of the <code>.npk</code> file that will be transfered. The request for
-uninstalling a containers requires the name and version of the container
+uninstalling a container requires the name and version of the container
 specified in <code>CONTAINER_NAME</code> and <code>CONTAINER_VERSION</code> correspondingly.</p>
 <pre><code class="language-json">{
     &quot;id&quot;: &quot;XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX&quot;,
