@@ -60,7 +60,7 @@ async fn send_request(
 }
 
 async fn create_client(host: &str) -> Result<api::client::Client> {
-    api::client::Client::new(&url::Url::parse(host)?)
+    api::client::Client::new(host)
         .await
         .context(format!("Failed to stablish connection to {}", host))
 }

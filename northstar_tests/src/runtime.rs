@@ -82,11 +82,10 @@ impl Northstar {
         cgroups.insert("cpu".into(), PathBuf::from(format!("northstar-{}", pid)));
 
         let console = format!("unix:///tmp/northstar-{}", std::process::id());
-        let console_url = url::Url::parse(&console)?;
 
         let config = Config {
             log_level: log::Level::Debug,
-            console: Some(console_url.clone()),
+            console: Some(console.clone()),
             run_dir,
             data_dir,
             log_dir,
@@ -111,7 +110,7 @@ impl Northstar {
         super::logger::assume("Started console on", 5u64).await?;
 
         // Connect to the runtime
-        let client = Client::new(&console_url).await?;
+        let client = Client::new(&console).await?;
         // Wait until a successfull connection
         logger::assume("Client .* connected", 5u64).await?;
 

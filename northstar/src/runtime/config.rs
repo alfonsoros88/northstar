@@ -15,7 +15,6 @@
 use log::Level;
 use serde::Deserialize;
 use std::{collections::HashMap, path::PathBuf};
-use url::Url;
 
 use super::RepositoryId;
 
@@ -24,7 +23,7 @@ pub struct Config {
     /// Log level: DEBUG, INFO, WARN or ERROR
     pub log_level: Level,
     /// Console address.
-    pub console: Option<Url>,
+    pub console: Option<String>,
     /// Directory with unpacked containers.
     pub run_dir: PathBuf,
     /// Directory where rw data of container shall be stored

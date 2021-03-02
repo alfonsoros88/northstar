@@ -30,7 +30,6 @@ use tokio::{
     sync::{mpsc, oneshot},
     task, time,
 };
-use url::Url;
 
 use super::{
     codec::framed,
@@ -70,7 +69,7 @@ pub enum Error {
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+///     let mut client = Client::new("tcp://localhost:4200").await.unwrap();
 ///     client.start("hello", &Version::parse("0.0.1").unwrap()).await.expect("Failed to start \"hello\"");
 ///     while let Some(notification) = client.next().await {
 ///         println!("{:?}", notification);
@@ -89,7 +88,14 @@ enum ClientRequest {
 
 impl<'a> Client {
     /// Create a new northstar client and connect to a runtime instance running on `host`.
-    pub async fn new(url: &Url) -> Result<Client, Error> {
+    pub async fn new(address: &str) -> Result<Client, Error> {
+        let url = url::Url::parse(address).map_err(|e| {
+            Error::InvalidConsoleAddress(format!(
+                "Failed to parse console address {}: {}",
+                address, e
+            ))
+        })?;
+
         let (notification_tx, notification_rx) = mpsc::channel(10);
         let (request_tx, mut request_rx) =
             mpsc::channel::<(ClientRequest, oneshot::Sender<Result<Response, Error>>)>(10);
@@ -183,7 +189,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new("tcp://localhost:4200").await.unwrap();
     /// let response = client.request(Containers).await.expect("Failed to request container list");
     /// println!("{:?}", response);
     /// # }
@@ -205,7 +211,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new("tcp://localhost:4200").await.unwrap();
     /// let containers = client.containers().await.expect("Failed to request container list");
     /// println!("{:#?}", containers);
     /// # }
@@ -226,7 +232,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new("tcp://localhost:4200").await.unwrap();
     /// let repositories = client.repositories().await.expect("Failed to request repository list");
     /// println!("{:#?}", repositories);
     /// # }
@@ -248,7 +254,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new(&"tcp://localhost:4200").await.unwrap();
     /// client.start("hello", &Version::parse("0.0.1").unwrap()).await.expect("Failed to start \"hello\"");
     /// // Print start notification
     /// println!("{:#?}", client.next().await);
@@ -278,7 +284,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new("tcp://localhost:4200").await.unwrap();
     /// client.stop("hello", &Version::parse("0.0.1").unwrap(), Duration::from_secs(3)).await.expect("Failed to start \"hello\"");
     /// // Print stop notification
     /// println!("{:#?}", client.next().await);
@@ -311,7 +317,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new("tcp://localhost:4200").await.unwrap();
     /// let npk = Path::new("test.npk");
     /// client.install(&npk, "default").await.expect("Failed to install \"test.npk\" into repository \"default\"");
     /// # }
@@ -342,7 +348,7 @@ impl<'a> Client {
     /// #
     /// # #[tokio::main]
     /// # async fn main() {
-    /// #   let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+    /// #   let mut client = Client::new("tcp://localhost:4200").await.unwrap();
     /// client.uninstall("hello", &Version::parse("0.0.1").unwrap()).await.expect("Failed to uninstall \"hello\"");
     /// // Print stop notification
     /// println!("{:#?}", client.next().await);
@@ -438,7 +444,7 @@ impl<'a> Client {
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let mut client = Client::new(&url::Url::parse("tcp://localhost:4200").unwrap()).await.unwrap();
+///     let mut client = Client::new("tcp://localhost:4200").await.unwrap();
 ///     client.start("hello", &Version::parse("0.0.1").unwrap()).await.expect("Failed to start \"hello\"");
 ///     while let Some(notification) = client.next().await {
 ///         println!("{:?}", notification);

@@ -72,12 +72,13 @@ pub enum Error {
 
 impl Console {
     /// Construct a new console instance
-    pub fn new(url: &Url, event_tx: EventTx) -> Result<Self, Error> {
+    pub fn new(url: &str, event_tx: EventTx) -> Result<Self, Error> {
         let (notification_tx, _notification_rx) = sync::broadcast::channel(100);
+        let url = Url::parse(url).expect(&format!("Invalid url: {}", url));
 
         Ok(Self {
             event_tx,
-            url: url.clone(),
+            url,
             notification_tx,
             stop: CancellationToken::new(),
             tasks: Vec::new(),
