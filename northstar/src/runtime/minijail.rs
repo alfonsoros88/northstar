@@ -104,9 +104,9 @@ impl<'a> Minijail<'a> {
         ::minijail::Minijail::log_to_fd(log_fd.as_raw_fd(), minijail_log_level as i32);
 
         Ok(Minijail {
+            log_fd,
             event_tx,
             config,
-            log_fd,
             log_task,
             stop_token,
         })
@@ -509,24 +509,27 @@ impl Debug {
     /// Start configured debug facilities and attach to `pid`
     async fn from(config: &Config, manifest: &Manifest, pid: u32) -> Result<Debug, Error> {
         // Attach a strace instance if configured in the runtime configuration
-        let strace = if let Some(strace) = config
+        let strace: futures::future::OptionFuture<_> = config
             .debug
             .as_ref()
-            .and_then(|debug| debug.strace.as_ref())
-        {
-            Some(Strace::new(strace, manifest, &config.log_dir, pid).await?)
-        } else {
-            None
-        };
+            .and_then(|d| d.strace.as_ref())
+            .map(|s| Strace::new(s, manifest, &config.log_dir, pid))
+            .into();
 
         // Attach a perf instance if configured in the runtime configuration
-        let perf = if let Some(perf) = config.debug.as_ref().and_then(|debug| debug.perf.as_ref()) {
-            Some(Perf::new(perf, manifest, &config.log_dir, pid).await?)
-        } else {
-            None
-        };
+        let perf: futures::future::OptionFuture<_> = config
+            .debug
+            .as_ref()
+            .and_then(|d| d.perf.as_ref())
+            .map(|p| Perf::new(p, manifest, &config.log_dir, pid))
+            .into();
 
-        Ok(Debug { strace, perf })
+        let (strace, perf) = tokio::join!(strace, perf);
+
+        Ok(Debug {
+            strace: strace.transpose()?,
+            perf: perf.transpose()?,
+        })
     }
 
     /// Shutdown configured debug facilities and attached to `pid`

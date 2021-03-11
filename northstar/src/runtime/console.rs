@@ -74,7 +74,7 @@ impl Console {
     /// Construct a new console instance
     pub fn new(url: &str, event_tx: EventTx) -> Result<Self, Error> {
         let (notification_tx, _notification_rx) = sync::broadcast::channel(100);
-        let url = Url::parse(url).expect(&format!("Invalid url: {}", url));
+        let url = Url::parse(url).unwrap_or_else(|_| panic!("Invalid url: {}", url));
 
         Ok(Self {
             event_tx,
