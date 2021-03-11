@@ -93,9 +93,13 @@ pub(crate) async fn waitpid(
         };
 
         // Send notification to main loop
-        event_handle
-            .blocking_send(Event::Exit(container, status.clone()))
-            .expect("Internal channel error on main event handle");
+        //
+        // TODO this is needed so that the runtime does not panic on shutdown
+        //
+        match event_handle.blocking_send(Event::Exit(container, status.clone())) {
+            Ok(()) => (),
+            Err(e) => log::warn!("Failed to send container exit status: {}", e),
+        };
 
         status
     })

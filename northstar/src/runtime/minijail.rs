@@ -54,6 +54,7 @@ pub struct Minijail<'a> {
     event_tx: EventTx,
     config: &'a Config,
     log_task: JoinHandle<()>,
+    stop_token: CancellationToken,
 }
 
 impl<'a> Minijail<'a> {
@@ -69,16 +70,25 @@ impl<'a> Minijail<'a> {
         })?;
         let mut lines = io::BufReader::new(async_reader).lines();
 
+        let stop_token = CancellationToken::new();
+        let task_stop = stop_token.clone();
+
         // Spawn a task that forwards logs from minijail to the rust logger.
         let log_task = task::spawn(async move {
-            while let Ok(Some(line)) = lines.next_line().await {
-                let l = line.split_whitespace().skip(2).collect::<String>();
-                match line.chars().next() {
-                    Some('D') => debug!("{}", l),
-                    Some('I') => info!("{}", l),
-                    Some('W') => warn!("{}", l),
-                    Some('E') => error!("{}", l),
-                    _ => trace!("{}", line),
+            loop {
+                select! {
+                    Ok(Some(line)) = lines.next_line() => {
+                        let l = line.split_whitespace().skip(2).collect::<String>();
+                        match line.chars().next() {
+                            Some('D') => debug!("{}", l),
+                            Some('I') => info!("{}", l),
+                            Some('W') => warn!("{}", l),
+                            Some('E') => error!("{}", l),
+                            _ => trace!("{}", line),
+                        }
+                    }
+                    _ = task_stop.cancelled() => break,
+                    else => break,
                 }
             }
         });
@@ -98,6 +108,7 @@ impl<'a> Minijail<'a> {
             config,
             log_fd,
             log_task,
+            stop_token,
         })
     }
 
@@ -108,6 +119,7 @@ impl<'a> Minijail<'a> {
 
         // Close the writing end of the minijail log task. This will make the task break
         drop(self.log_fd);
+        self.stop_token.cancel();
 
         // Wait for the log task to exit
         self.log_task

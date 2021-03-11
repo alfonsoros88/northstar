@@ -149,10 +149,11 @@ impl Console {
                                 debug!("Closing listener on {}", address);
                                 drop(listener);
                                 debug!("Closed listener on {}", address);
-                                if ! connections.is_empty() {
-                                    debug!("Waiting for connections to be closed");
-                                    while connections.next().await.is_some() {}
-                                }
+
+                                 if ! connections.is_empty() {
+                                     debug!("Waiting for connections to be closed");
+                                     while connections.next().await.is_some() {}
+                                 }
                                 break;
                             }
                         }
@@ -275,6 +276,7 @@ impl Console {
                         }
                     };
 
+                    log::trace!("Sending notification to client {}", peer);
                     if let Err(e) = network_stream
                         .send(api::model::Message::new_notification(notification))
                         .await
@@ -282,6 +284,7 @@ impl Console {
                         warn!("{}: Connection error: {}", peer, e);
                         break;
                     }
+                    log::trace!("Notification sent to client {}", peer);
                 }
                 item = network_stream.next() => {
                     let message = if let Some(Ok(msg)) = item {
@@ -353,20 +356,31 @@ impl Console {
                         } else {
                             Request::Message(message)
                         };
+                    trace!("request: {:?}", request);
 
                     // Create a oneshot channel for the runtimes reply
                     let (reply_tx, reply_rx) = oneshot::channel();
 
                     // Send the request to the runtime
-                    event_tx
+                    trace!("{:?} -> event loop", request);
+                    if let Err(e) = event_tx
                         .send(Event::Console(request, reply_tx))
-                        .await
-                        .expect("Internal channel error on main");
+                        .await {
+                        // This could happen if the runtime is in process of shutting down
+                        warn!("Failed to send request to event loop: {}", e);
+                        break;
+                    }
 
                     // Wait for the reply from the runtime
-                    let response: api::model::Response = reply_rx
-                        .await
-                        .expect("Internal channel error on client reply");
+                    let response = match reply_rx .await {
+                        Ok(response) => response,
+                        Err(e) => {
+                            // This could happen if the runtime is in process of shutting down
+                            warn!("Failed to get response from event loop: {}", e);
+                            break;
+                        }
+                    };
+                    trace!("{:?} <- event loop", response);
 
                     keep_file.take();
 

@@ -176,7 +176,7 @@ async fn runtime_task(config: &'_ Config, stop: CancellationToken) -> Result<(),
     let mut state = State::new(config, event_tx.clone()).await?;
 
     // Inititalize the console if configured
-    let console = if let Some(url) = config.console.as_ref() {
+    let mut console = if let Some(url) = config.console.as_ref() {
         let mut console = console::Console::new(url, event_tx.clone()).map_err(Error::Console)?;
         console.listen().await.map_err(Error::Console)?;
 
@@ -206,7 +206,18 @@ async fn runtime_task(config: &'_ Config, stop: CancellationToken) -> Result<(),
             // A container process existed. Check `process::wait_exit` for details.
             Event::Exit(container, exit_status) => state.on_exit(&container, &exit_status).await,
             // The runtime os commanded to shut down and exit.
-            Event::Shutdown => break state.shutdown().await,
+            Event::Shutdown => {
+                log::debug!("Stopping to process events");
+                drop(event_rx);
+
+                log::debug!("Stopping console");
+                if let Some(console) = console.take() {
+                    console.shutdown().await.map_err(Error::Console)?;
+                }
+
+                log::debug!("Shutting down runtime");
+                break state.shutdown().await;
+            }
             // Forward notifications to console
             Event::Notification(notification) => {
                 if let Some(console) = console.as_ref() {
@@ -219,7 +230,7 @@ async fn runtime_task(config: &'_ Config, stop: CancellationToken) -> Result<(),
         }
     }?;
 
-    if let Some(console) = console {
+    if let Some(console) = console.take() {
         console.shutdown().await.map_err(Error::Console)?;
     }
 
