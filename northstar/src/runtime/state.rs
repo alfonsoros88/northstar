@@ -473,6 +473,7 @@ impl<'a> State<'a> {
             self.umount(container).await?;
         }
 
+        log::debug!("Closing minijail log task");
         self.minijail.shutdown().await.map_err(Error::Process)
     }
 
@@ -756,10 +757,8 @@ impl<'a> State<'a> {
     }
 
     async fn notification(&self, n: Notification) {
-        self.events_tx
-            .send(Event::Notification(n))
-            .await
-            .expect("Internal channel error on main");
+        // TODO do not ignore this
+        let _ = self.events_tx.send(Event::Notification(n)).await;
     }
 }
 

@@ -18,7 +18,7 @@ use crate::{
     runtime::{EventTx, ExitStatus},
 };
 use futures::{
-    future::{join_all, pending, Either},
+    future::{join_all, pending, Either, FutureExt},
     sink::SinkExt,
     stream::FuturesUnordered,
     StreamExt,
@@ -357,15 +357,16 @@ impl Console {
                     let (reply_tx, reply_rx) = oneshot::channel();
 
                     // Send the request to the runtime
-                    event_tx
-                        .send(Event::Console(request, reply_tx))
-                        .await
-                        .expect("Internal channel error on main");
-
-                    // Wait for the reply from the runtime
-                    let response: api::model::Response = reply_rx
-                        .await
-                        .expect("Internal channel error on client reply");
+                    trace!("{:?} -> event loop", request);
+                    let response = match event_tx.send(Event::Console(request, reply_tx)).then(|_| reply_rx).await {
+                        Ok(response) => response,
+                        Err(e) => {
+                            // This could happen if the runtime is in process of shutting down
+                            warn!("Failed to get response from event loop: {}", e);
+                            break;
+                        }
+                    };
+                    trace!("{:?} <- event loop", response);
 
                     keep_file.take();
 
