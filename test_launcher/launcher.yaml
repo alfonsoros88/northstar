@@ -1,0 +1,96 @@
+time: 1 hour
+cpus: [1, 2, 3, 4]
+results:
+  out_dir: results
+strace: false
+capture_syslog_errors: true
+metrics:
+  memory:
+    freq: 1 sec
+  file_descriptors:
+    freq: 1 sec
+containers:
+  - name: test00
+    version: 0.0.1
+    start_after: 5 seconds
+    stop_after: 5 seconds
+  - name: test01
+    version: 0.0.1
+    start_after: 1 seconds
+    stop_after: 1 seconds
+  - name: test02
+    version: 0.0.1
+    start_after: 1 seconds
+    stop_after: 2 seconds
+  - name: test03
+    version: 0.0.1
+    start_after: 2 seconds
+    stop_after: 3 seconds
+  - name: test04
+    version: 0.0.1
+    start_after: 2 seconds
+    stop_after: 4 seconds
+  - name: test05
+    version: 0.0.1
+    start_after: 2 seconds
+    stop_after: 5 seconds
+  - name: test06
+    version: 0.0.1
+    start_after: 3 seconds
+    stop_after: 6 seconds
+  - name: test07
+    version: 0.0.1
+    start_after: 3 seconds
+    stop_after: 7 seconds
+  - name: test08
+    version: 0.0.1
+    start_after: 4 seconds
+    stop_after: 8 seconds
+  - name: test09
+    version: 0.0.1
+    start_after: 4 seconds
+    stop_after: 9 seconds
+  - name: test10
+    version: 0.0.1
+    start_after: 5 seconds
+    stop_after: 10 seconds
+  - name: test11
+    version: 0.0.1
+    start_after: 5 seconds
+    stop_after: 11 seconds
+  - name: test12
+    version: 0.0.1
+    start_after: 6 seconds
+    stop_after: 12 seconds
+  - name: test13
+    version: 0.0.1
+    start_after: 6 seconds
+    stop_after: 13 seconds
+  - name: test14
+    version: 0.0.1
+    start_after: 7 seconds
+    stop_after: 14 seconds
+  - name: test15
+    version: 0.0.1
+    start_after: 7 seconds
+    stop_after: 15 seconds
+  - name: test16
+    version: 0.0.1
+    start_after: 8 seconds
+    stop_after: 16 seconds
+  - name: test17
+    version: 0.0.1
+    start_after: 8 seconds
+    stop_after: 1 seconds
+  - name: test18
+    version: 0.0.1
+    start_after: 9 seconds
+    stop_after: 2 seconds
+  - name: test19
+    version: 0.0.1
+    start_after: 9 seconds
+    stop_after: 3 seconds
+  - name: test20
+    version: 0.0.1
+    start_after: 10 seconds
+    stop_after: 5 seconds

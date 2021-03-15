@@ -18,6 +18,7 @@ members = [
     "npk",
     "nstar",
     "sextant",
+    "test_launcher",
 ]
 
 [profile.dev]

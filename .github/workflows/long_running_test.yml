@@ -1,0 +1,54 @@
+name: Long Running Test
+
+# TODO Change this to be scheduled daily only for master
+on:
+  push:
+    branches:
+      - test_launcher
+
+jobs:
+  long-running-test:
+    runs-on: self-hosted
+    timeout-minutes: 20000
+    steps:
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-integration-tests
+
+      # TODO deal with these sudo remanings
+      - run: sudo rm -rf results target
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+
+      - name: Build containers
+        shell: bash
+        run: |
+            ./examples/build_examples.sh
+
+      - name: Start the test
+        run: |
+          mkdir results
+          cargo run --bin test_launcher --features="launcher" -- --config test_launcher/launcher.yaml
+
+      # TODO maybe is better to do this in the same repo but in a separate
+      # branch or have the other repo as a submodule
+      - name: Pushes to another repository
+        uses: alfonsoros88/github-action-push-to-another-repository@master
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: 'results'
+          destination-github-username: 'alfonsoros88'
+          destination-repository-name: 'northstar-timing'
+          user-email: alfonso.ros@esrlabs.com
