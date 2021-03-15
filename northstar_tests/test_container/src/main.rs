@@ -43,15 +43,23 @@ enum TestCommands {
     LeakMemory,
 }
 
+#[derive(StructOpt)]
+struct CommandLineOpts {
+    script_path: Option<PathBuf>,
+}
+
+#[allow(clippy::all)]
 fn main() -> Result<()> {
-    let input = Path::new("/data").join("input.txt");
+    let opts = CommandLineOpts::from_args();
+    let input = if let Some(path) = opts.script_path {
+        path
+    } else {
+        Path::new("/data").join("input.txt")
+    };
+    println!("Executing script {}", input.display());
+
     if input.exists() {
-        println!("Reading {}", input.display());
         let commands = fs::read_to_string(&input)?;
-
-        println!("Removing {}", input.display());
-        fs::remove_file(&input)?;
-
         for line in commands.lines() {
             println!("Executing \"{}\"", line);
             let command = iter::once("test_container").chain(line.split_whitespace());
