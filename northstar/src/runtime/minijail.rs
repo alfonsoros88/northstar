@@ -21,7 +21,7 @@ use super::{
 };
 use crate::runtime::EventTx;
 use bytes::{Buf, BytesMut};
-use futures::Future;
+use futures::{future::OptionFuture, Future};
 use itertools::Itertools;
 use log::{debug, error, info, trace, warn, Level};
 use nix::{
@@ -497,22 +497,26 @@ impl Debug {
     /// Start configured debug facilities and attach to `pid`
     async fn from(config: &Config, manifest: &Manifest, pid: u32) -> Result<Debug, Error> {
         // Attach a strace instance if configured in the runtime configuration
-        let strace = if let Some(strace) = config
-            .debug
-            .as_ref()
-            .and_then(|debug| debug.strace.as_ref())
-        {
-            Some(Strace::new(strace, manifest, &config.log_dir, pid).await?)
-        } else {
-            None
-        };
+        let strace = Into::<OptionFuture<_>>::into(
+            config
+                .debug
+                .as_ref()
+                .and_then(|debug| debug.strace.as_ref())
+                .map(|strace| Strace::new(strace, manifest, &config.log_dir, pid)),
+        )
+        .await
+        .transpose()?;
 
         // Attach a perf instance if configured in the runtime configuration
-        let perf = if let Some(perf) = config.debug.as_ref().and_then(|debug| debug.perf.as_ref()) {
-            Some(Perf::new(perf, manifest, &config.log_dir, pid).await?)
-        } else {
-            None
-        };
+        let perf = Into::<OptionFuture<_>>::into(
+            config
+                .debug
+                .as_ref()
+                .and_then(|debug| debug.perf.as_ref())
+                .map(|perf| Perf::new(perf, manifest, &config.log_dir, pid)),
+        )
+        .await
+        .transpose()?;
 
         Ok(Debug { strace, perf })
     }
