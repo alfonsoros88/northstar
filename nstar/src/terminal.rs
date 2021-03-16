@@ -12,7 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-use super::commands::parse_prompt;
 use anyhow::{Context as _, Result};
 use colored::Colorize;
 use futures::Stream;
@@ -35,7 +34,6 @@ use std::{
     io::Write,
     pin,
 };
-use structopt::clap;
 use tokio::{sync::mpsc, task};
 
 #[derive(Debug)]
@@ -87,14 +85,13 @@ impl Terminal {
             buffer: Vec::new(),
         };
 
-        let prompt = "➜ ";
-        rl.helper_mut().expect("No helper").colored_prompt = format!("\x1b[1;32m{}\x1b[0m", prompt);
-
+        let green_arrow = "-> ".green().to_string();
+        rl.helper_mut().expect("No helper").colored_prompt = green_arrow;
         let (tx, rx) = mpsc::channel(10);
 
         task::spawn_blocking(move || {
             loop {
-                let readline = rl.readline(&prompt);
+                let readline = rl.readline(&"-> ".green());
                 match readline {
                     Ok(line) => {
                         if tx.blocking_send(UserInput::Line(line)).is_err() {
@@ -187,34 +184,13 @@ impl Highlighter for NstarHelper {
     }
 }
 
+// Skip the validation step, this is done with clap
 impl Validator for NstarHelper {
     fn validate(
         &self,
-        ctx: &mut validate::ValidationContext,
+        _: &mut validate::ValidationContext,
     ) -> rustyline::Result<validate::ValidationResult> {
-        use validate::ValidationResult::*;
-
-        match parse_prompt(ctx.input()) {
-            Ok(_) => Ok(Valid(None)),
-            Err(e) => {
-                // Help requested
-                if e.kind == clap::ErrorKind::HelpDisplayed {
-                    return Ok(Valid(None));
-                }
-
-                let message = match e.kind {
-                    clap::ErrorKind::InvalidSubcommand | clap::ErrorKind::UnknownArgument => {
-                        format!("Invalid command, use {}", "help".blue())
-                    }
-                    clap::ErrorKind::MissingRequiredArgument => {
-                        format!("Missing argument, use {} for help", "-h,--help".blue())
-                    }
-                    _ => format!("{:?} {}", e.kind, "Unknown".normal()),
-                };
-
-                Ok(Invalid(Some(format!("    <- ⚠️: {}", message))))
-            }
-        }
+        Ok(validate::ValidationResult::Valid(None))
     }
 
     fn validate_while_typing(&self) -> bool {
